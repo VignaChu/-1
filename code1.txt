@@ -1,0 +1,31 @@
+#include <iostream>
+#include <chrono> // 用于测量时间
+using namespace std;
+
+int num = 1000000;
+int arr[1000000];
+int sum = 0;
+
+void my_plus() {
+    int i = 0;
+    for (i; i < num; i++)
+        sum += arr[i];
+}
+
+int main() {
+    int j = 0;
+    for (j = 0; j < num; j++) 
+        arr[j] = j + 1; 
+
+    auto start = chrono::high_resolution_clock::now(); 
+
+    my_plus();
+
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double, milli> duration = end - start;
+
+    cout << "运算结果是：" << sum << endl;
+    cout << "程序执行时间：" << duration.count() << " 毫秒" << endl;
+
+    return 0;
+}

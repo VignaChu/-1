@@ -1,0 +1,57 @@
+#include <iostream>
+#include <chrono>
+using namespace std;
+
+const int n = 1024;
+int matrix[n][n];
+int vector[n];
+int result[n];
+
+// 4次展开的宏模板
+#define UNROLL4(c) \
+    result[c] += mat_row[c] * vec_val; \
+    result[c+1] += mat_row[c+1] * vec_val; \
+    result[c+2] += mat_row[c+2] * vec_val; \
+    result[c+3] += mat_row[c+3] * vec_val;
+
+int main() {
+    // 初始化矩阵和向量
+    for (int i = 0; i < n; ++i) {
+        vector[i] = i % 10;  // 向量元素模10防止溢出
+        for (int j = 0; j < n; ++j) {
+            matrix[i][j] = (i + j) % 100; // 矩阵元素模100控制数值范围
+        }
+    }
+
+    auto start = chrono::high_resolution_clock::now();
+    
+    // 手动初始化结果数组（替代fill_n）
+    for(int i=0; i<n; ++i){
+        result[i] = 0;  // 传统循环替代库函数
+    }
+
+    const int block_size = 64; // 匹配CPU缓存行大小（通常64字节）
+    for (int row = 0; row < n; ++row) {
+        int vec_val = vector[row];     // 寄存器缓存复用值
+        int* mat_row = matrix[row];    // 指针减少维度访问
+        
+        // 分块循环：提升缓存利用率
+        for (int col = 0; col < n; col += block_size) {
+            int end_col = min(col + block_size, n);
+            // 展开循环：减少分支预测失败
+            for (int c = col; c < end_col; c += 4) {
+                UNROLL4(c); // 编译器会展开为顺序指令
+            }
+        }
+    }
+
+    auto end = chrono::high_resolution_clock::now();
+
+    // 输出前5个结果验证正确性
+    cout << "结果: ";
+    for (int i = 0; i < 5; ++i)
+        cout << result[i] << " ";
+    cout << "\n时间: " << chrono::duration<double, milli>(end - start).count() << " ms\n";
+
+    return 0;
+}

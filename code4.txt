@@ -1,0 +1,44 @@
+#include <iostream>
+#include <chrono>
+#include <algorithm> 
+using namespace std;
+
+const int n = 1024;
+int matrix[n][n];  
+int vector[n];   
+int result[n];  
+
+int main() {
+    // 初始化矩阵和向量
+    for (int i = 0; i < n; ++i) {
+        vector[i] = i % 10;
+        for (int j = 0; j < n; ++j) {
+            matrix[i][j] = (i + j) % 100;
+        }
+    }
+
+    auto start = chrono::high_resolution_clock::now();
+    fill_n(result, n, 0);
+
+    const int block_size = 64;
+    for (int row = 0; row < n; ++row) {
+        int vec_val = vector[row];
+        int* mat_row = matrix[row];
+        
+        for (int col = 0; col < n; col += block_size) {
+            int end_col = min(col + block_size, n);
+            for (int c = col; c < end_col; ++c) {
+                result[c] += mat_row[c] * vec_val;
+            }
+        }
+    }
+
+    auto end = chrono::high_resolution_clock::now();
+
+    cout << "结果: ";
+    for (int i = 0; i < 5; ++i) 
+        cout << result[i] << " ";
+    cout << "\n时间: " << chrono::duration<double, milli>(end - start).count() << " ms\n";
+
+    return 0;
+}
